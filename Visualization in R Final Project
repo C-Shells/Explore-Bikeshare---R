@@ -1,0 +1,126 @@
+#NOTE: I wrote this in R Studio and copied it over to the Classroom Workspace to submit, but since the CSV files in the workspace don't
+#match the downloads, I then reverted to GitHub.
+
+#Load files
+new.york.city = read.csv('new_york_city.csv')
+washington = read.csv('washington.csv')
+chicago = read.csv('chicago.csv')
+
+# My questions will focus on getting to know the demographics of my Users.
+#----------------------------------------------------------------------
+# QUESTION 1:
+# Are Subscribers average trip duration longer than other User Types?
+# This first visualization is a bar chart showing the breakdown of avg trip duration by user type.
+
+
+# Cleaning up NY data set to assign "Unknown" to all blank User Types.
+new.york.city$User.Type[is.na(new.york.city$User.Type) | new.york.city$User.Type == ""] <- "Unknown"
+
+
+library(dplyr)
+# Pulling only User.Type and Trip.Duration from each data set.
+chi_dur_user <- chicago %>% select(User.Type, Trip.Duration)
+ny_dur_user <- new.york.city %>% select(User.Type, Trip.Duration)
+wa_dur_user <- washington %>% select(User.Type, Trip.Duration)
+
+# Combining the variables above into one variable and grouping by User.Type.
+all_dur_user <- rbind(chi_dur_user, ny_dur_user, wa_dur_user)
+
+group_dur_user <- all_dur_user %>%
+  group_by(User.Type) %>%
+  summarize(avg_trip_dur = mean(Trip.Duration, na.rm = TRUE))
+
+# Creating a bar chart to show the average trip duration by user type in descending order.
+library (ggplot2)
+ggplot(group_dur_user, aes(x = reorder(User.Type, -avg_trip_dur), y = avg_trip_dur, fill = User.Type)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Average Trip Duration by User Type",
+       x = "User Type",
+       y = "Average Trip Duration (in seconds)",
+       fill = "") + #Removing the header from the legend
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+#Summary of question 1 results:
+# This shows that Subscriber's average trips are shorter than other User Types.
+
+#----------------------------------------------------------------------
+# QUESTION 2:
+# Are Subscribers mainly male or female?
+# This second visualization is a stacked bar chart showing the breakdown of gender by user type.
+
+
+# Cleaning up NY data set to assign "Unknown" to all blank Genders.
+new.york.city$Gender[is.na(new.york.city$Gender) | new.york.city$Gender == ""] <- "Unknown"
+
+# Cleaning up Chicago data set to assign "Unknown" to all blank Genders.
+chicago$Gender[is.na(chicago$Gender) | chicago$Gender == ""] <- "Unknown"
+
+# Washington does not have Gender data and will not be evaluated.
+
+library(dplyr)
+# Pulling only User.Type and Gender from each data set.
+chi_gen_user <- chicago %>% select(User.Type, Gender)
+ny_gen_user <- new.york.city %>% select(User.Type, Gender)
+
+
+# Combining the variables above into one variable and grouping by User.Type.
+all_gen_user <- rbind(chi_gen_user, ny_gen_user)
+
+group_gen_user <- all_gen_user %>%
+  group_by(User.Type, Gender) %>%
+  summarize(count =n())
+
+
+library(ggplot2)
+#Creating the stacked bar chart.  I had issues with getting the Y axis labels and had to use both scipen and scale_y_continous
+options(scipen = 999)
+ggplot(group_gen_user, aes(x = User.Type, y = count, fill = Gender)) +
+  geom_bar(stat = "identity") +
+  labs(title = "User Types by Gender",
+       x = "User Type",
+       y = "Number of Users",
+       fill = "Gender") +
+  theme_minimal()+
+  theme(plot.title = element_text(hjust = 0.5) +
+  scale_y_continuous(labels = scales::comma, breaks = seq(0, max(group_gen_user$count), by = 500)))
+
+#Summary of question 2 results:
+# This shows that my subscribers are primarily male.
+
+
+#----------------------------------------------------------------------
+#QUESTION 3:
+# Are my subscribers primarily younger than other user types?
+# My third visualization is a box plot showing the spread of age by user type.
+
+
+library(dplyr)
+# Pulling only User.Type and Gender from each data set.
+chi_dob_user <- chicago %>% select(User.Type, Birth.Year)
+ny_dob_user <- new.york.city %>% select(User.Type, Birth.Year)
+
+# Washington does not have Birth.Year and will not be evaluated.
+
+# Combining the variables above into one variable and converting year to age.
+all_dob_user <- rbind(chi_dob_user, ny_dob_user)
+
+all_dob_user$Age <- 2025 - all_dob_user$Birth.Year
+
+
+library(ggplot2)
+
+ggplot(all_dob_user, aes(x = User.Type, y = Age, fill = User.Type)) +
+  geom_boxplot() + # Using a boxplot for this one to show the range and outliers.
+  labs(title = "Age by User Type",
+       x = "User Type",
+       y = "Age",
+       fill = "") +
+  scale_y_continuous(breaks = seq(0, 150, by = 10)) + # Setting my Y axis to every 10 years.
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5)) # Centering the title
+
+#Summary of question 3 results:
+# This box plot shows me that overall, the age of my users are relatively the same across all user types.
+# Subscribers are slightly older than Customers and are also more likely to give me a fake age.  Noting the
+# outliers over 100 years old.
