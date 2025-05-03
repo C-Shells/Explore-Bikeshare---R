@@ -1,5 +1,5 @@
 #NOTE: I wrote this in R Studio and copied it over to the Classroom Workspace to submit, but since the CSV files in the workspace don't
-#match the downloads, I then reverted to GitHub.
+#match the downloads I was getting different results in the workspace vs R Studio, I then reverted to GitHub.
 
 #Load files
 new.york.city = read.csv('new_york_city.csv')
